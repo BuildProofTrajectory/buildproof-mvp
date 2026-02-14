@@ -23,7 +23,7 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: "Missing userId in request body" }, { status: 400 });
     }
 
-    const stripe = new Stripe(secret, { apiVersion: "2023-10-16" });
+    const stripe = new Stripe(secret);
 
     const session = await stripe.checkout.sessions.create({
       mode: "subscription",
