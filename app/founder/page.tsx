@@ -99,7 +99,7 @@ export default function FounderDashboardPage() {
         <div>
           <h1 style={{ marginBottom: 6 }}>Founder Dashboard</h1>
           <p style={{ marginTop: 0, color: "#666" }}>
-            Manage your posted projects and approve builder requests.
+            Manage your projects and approve builder requests.
           </p>
         </div>
 
