@@ -6,7 +6,7 @@ import { supabase } from "../../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
 
 type Project = {
-  id: string;
+  id: number; // projects.id is bigint
   title: string | null;
   goal: string | null;
   status: string | null;
@@ -22,30 +22,49 @@ export default function BuilderProjectsFeedPage() {
     const load = async () => {
       setLoading(true);
 
-      // Require login
       const { data: auth } = await supabase.auth.getUser();
       const user = auth.user;
+
       if (!user) {
         router.push("/login");
         return;
       }
 
-      // OPTIONAL: if you want to enforce subscription here too later,
-      // we can check profiles.subscription_status === "active"
+      // 1) Get recommended project IDs for this builder
+      const { data: recs, error: recErr } = await supabase
+        .from("recommendations")
+        .select("project_id, score, reason")
+        .eq("builder_id", user.id)
+        .order("score", { ascending: false });
 
-      const { data, error } = await supabase
-        .from("projects")
-        .select("id,title,goal,status,created_at")
-        .eq("status", "posted")
-        .order("created_at", { ascending: false });
-
-      if (error) {
-        alert(error.message);
+      if (recErr) {
+        alert(recErr.message);
         setLoading(false);
         return;
       }
 
-      setProjects((data as Project[]) || []);
+      const projectIds = (recs || []).map((r: any) => r.project_id).filter(Boolean);
+
+      if (projectIds.length === 0) {
+        setProjects([]);
+        setLoading(false);
+        return;
+      }
+
+      // 2) Load only those projects
+      const { data: projs, error: projErr } = await supabase
+        .from("projects")
+        .select("id,title,goal,status,created_at")
+        .in("id", projectIds)
+        .order("created_at", { ascending: false });
+
+      if (projErr) {
+        alert(projErr.message);
+        setLoading(false);
+        return;
+      }
+
+      setProjects((projs as Project[]) || []);
       setLoading(false);
     };
 
@@ -56,9 +75,9 @@ export default function BuilderProjectsFeedPage() {
     <div style={{ padding: 40, fontFamily: "system-ui", maxWidth: 900, margin: "0 auto" }}>
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
         <div>
-          <h1 style={{ marginBottom: 6 }}>Available Projects</h1>
+          <h1 style={{ marginBottom: 6 }}>Recommended Projects</h1>
           <p style={{ marginTop: 0, color: "#666" }}>
-            These are posted founder projects. Next we’ll add “recommended for you” matching.
+            For MVP, you’ll only see projects that were explicitly recommended to you.
           </p>
         </div>
 
@@ -83,9 +102,10 @@ export default function BuilderProjectsFeedPage() {
           <div style={{ color: "#666" }}>Loading…</div>
         ) : projects.length === 0 ? (
           <div style={{ padding: 20, border: "1px solid #eee", borderRadius: 12 }}>
-            <p style={{ marginTop: 0 }}>No posted projects yet.</p>
+            <p style={{ marginTop: 0, fontWeight: 700 }}>No recommendations yet.</p>
             <p style={{ color: "#666", marginBottom: 0 }}>
-              Ask a founder (you) to post one via /founder/intake.
+              Next we’ll auto-generate recommendations based on your builder profile.
+              For now, we’ll seed a few recommendations manually.
             </p>
           </div>
         ) : (
