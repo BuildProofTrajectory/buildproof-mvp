@@ -76,6 +76,7 @@ export default function BuilderProjectsFeedPage() {
       <div style={{ display: "flex", alignItems: "baseline", justifyContent: "space-between", gap: 16 }}>
         <div>
           <h1 style={{ marginBottom: 6 }}>Recommended Projects</h1>
+          <p style={{ color: "#c00", fontWeight: 700 }}>VERSION: RECOMMENDATIONS ONLY ✅</p>
           <p style={{ marginTop: 0, color: "#666" }}>
             For MVP, you’ll only see projects that were explicitly recommended to you.
           </p>
