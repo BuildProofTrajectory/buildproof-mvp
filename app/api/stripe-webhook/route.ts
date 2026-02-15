@@ -20,6 +20,7 @@ export async function POST(req: Request) {
     return NextResponse.json({ error: "Missing stripe-signature header" }, { status: 400 });
   }
 
+  // Stripe requires the raw body to validate the signature
   const rawBody = await req.text();
 
   let event: Stripe.Event;
@@ -33,6 +34,10 @@ export async function POST(req: Request) {
   }
 
   try {
+    /**
+     * 1) Checkout completed -> activate the user.
+     * We rely on client_reference_id (set to Supabase userId during checkout)
+     */
     if (event.type === "checkout.session.completed") {
       const session = event.data.object as Stripe.Checkout.Session;
 
@@ -52,9 +57,46 @@ export async function POST(req: Request) {
         })
         .eq("id", userId);
 
-      if (error) {
-        return NextResponse.json({ error: error.message }, { status: 500 });
-      }
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    /**
+     * 2) Subscription updated -> set active/inactive based on Stripe subscription status
+     * We match the profile by stripe_customer_id
+     */
+    if (event.type === "customer.subscription.updated") {
+      const sub = event.data.object as Stripe.Subscription;
+
+      const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+      const isActive = sub.status === "active" || sub.status === "trialing";
+
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        .update({
+          subscription_status: isActive ? "active" : "inactive",
+        })
+        .eq("stripe_customer_id", customerId);
+
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
+    }
+
+    /**
+     * 3) Subscription deleted -> mark inactive
+     * We match the profile by stripe_customer_id
+     */
+    if (event.type === "customer.subscription.deleted") {
+      const sub = event.data.object as Stripe.Subscription;
+
+      const customerId = typeof sub.customer === "string" ? sub.customer : sub.customer.id;
+
+      const { error } = await supabaseAdmin
+        .from("profiles")
+        .update({
+          subscription_status: "inactive",
+        })
+        .eq("stripe_customer_id", customerId);
+
+      if (error) return NextResponse.json({ error: error.message }, { status: 500 });
     }
 
     return NextResponse.json({ received: true });
