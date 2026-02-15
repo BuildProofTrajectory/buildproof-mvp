@@ -38,8 +38,8 @@ export default function BuilderPage() {
         return;
       }
 
-      const role = (profile.role ?? "").toLowerCase().trim();
-      const sub = (profile.subscription_status ?? "inactive").toLowerCase().trim();
+      const role = String(profile.role || "").toLowerCase().trim();
+      const sub = String(profile.subscription_status || "inactive").toLowerCase().trim();
 
       setDebug(`role="${role}" sub="${sub}"`);
 
@@ -105,6 +105,21 @@ export default function BuilderPage() {
           }}
         >
           View Recommended Projects
+        </Link>
+
+        <Link
+          href="/builder/active"
+          style={{
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            background: "white",
+            color: "#111",
+            textDecoration: "none",
+            fontWeight: 700,
+          }}
+        >
+          My Active Project
         </Link>
       </div>
     </div>
