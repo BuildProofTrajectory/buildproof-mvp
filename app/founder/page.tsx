@@ -90,7 +90,9 @@ export default function FounderDashboardPage() {
               <div key={p.id} style={{ padding: 16, border: "1px solid #eee", borderRadius: 12 }}>
                 <div style={{ display: "flex", justifyContent: "space-between", gap: 12 }}>
                   <div>
+                    <Link href={`/founder/project/${p.id}`} style={{ textDecoration: "none", color: "#111" }}>
                     <h3 style={{ margin: 0 }}>{p.title || "Untitled project"}</h3>
+                    </Link>
                     <p style={{ marginTop: 8, color: "#555" }}>{p.goal}</p>
                   </div>
 
