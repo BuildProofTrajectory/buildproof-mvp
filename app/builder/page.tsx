@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "../../lib/supabaseClient";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 export default function BuilderPage() {
   const router = useRouter();
@@ -68,9 +69,29 @@ export default function BuilderPage() {
   }
 
   return (
-    <div style={{ padding: 40, fontFamily: "system-ui" }}>
+    <div style={{ padding: 40, fontFamily: "system-ui", maxWidth: 900, margin: "0 auto" }}>
       <h1>Builder Dashboard ✅</h1>
-      <p>Subscription is active.</p>
+      <p style={{ color: "#555" }}>
+        You now have access to live founder projects.
+      </p>
+
+      <div style={{ marginTop: 20 }}>
+        <Link
+          href="/builder/projects"
+          style={{
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid #111",
+            background: "#111",
+            color: "white",
+            textDecoration: "none",
+            fontWeight: 700,
+            display: "inline-block",
+          }}
+        >
+          View Available Projects
+        </Link>
+      </div>
     </div>
   );
 }
