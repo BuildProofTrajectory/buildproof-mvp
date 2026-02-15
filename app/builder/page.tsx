@@ -70,12 +70,28 @@ export default function BuilderPage() {
 
   return (
     <div style={{ padding: 40, fontFamily: "system-ui", maxWidth: 900, margin: "0 auto" }}>
-      <h1>Builder Dashboard ✅</h1>
+      <h1>Builder Dashboard</h1>
+
       <p style={{ color: "#555" }}>
-        You now have access to live founder projects.
+        Explore projects recommended specifically for you.
       </p>
 
-      <div style={{ marginTop: 20 }}>
+      <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
+        <Link
+          href="/builder/profile"
+          style={{
+            padding: "12px 16px",
+            borderRadius: 10,
+            border: "1px solid #ddd",
+            background: "white",
+            color: "#111",
+            textDecoration: "none",
+            fontWeight: 700,
+          }}
+        >
+          Edit Builder Profile
+        </Link>
+
         <Link
           href="/builder/projects"
           style={{
@@ -86,10 +102,9 @@ export default function BuilderPage() {
             color: "white",
             textDecoration: "none",
             fontWeight: 700,
-            display: "inline-block",
           }}
         >
-          View Available Projects
+          View Recommended Projects
         </Link>
       </div>
     </div>

@@ -33,24 +33,51 @@ export default function FounderBriefPage() {
         return;
       }
 
-      const { error } = await supabase.from("projects").insert({
-        founder_id: user.id,
-        title: brief.title,
-        goal: brief.goal,
-        inputs_available: brief.inputs_available,
-        constraints: brief.constraints,
-        commitments: brief.commitments,
-        timeline: brief.timeline,
-        status: "posted",
-      });
+      // Category (simple MVP mapping)
+      const titleLower = String(brief.title || "").toLowerCase();
+      const category =
+        titleLower.includes("canva") ? "Canva design" :
+        titleLower.includes("social") ? "Social media" :
+        titleLower.includes("email") ? "Email marketing" :
+        titleLower.includes("e-commerce") || titleLower.includes("shopify") ? "E-commerce / Shopify" :
+        "Social media";
+
+      // 1) Insert project + return the new id
+      const { data: inserted, error } = await supabase
+        .from("projects")
+        .insert({
+          founder_id: user.id,
+          title: brief.title,
+          goal: brief.goal,
+          inputs_available: brief.inputs_available,
+          constraints: brief.constraints,
+          commitments: brief.commitments,
+          timeline: brief.timeline,
+          status: "posted",
+          category,
+        })
+        .select("id")
+        .single();
 
       if (error) {
         alert(error.message);
         return;
       }
 
-      localStorage.removeItem("founder_brief");
+      // 2) Auto-seed recommendations for matching builders
+      // (Uses service role on server; founder does not need access to recommendations table.)
+      const seedRes = await fetch("/api/recommendations/seed-for-project", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ projectId: inserted.id }),
+      });
 
+      const seedData = await seedRes.json();
+      if (!seedRes.ok) {
+        alert("Project posted, but seeding failed ❌\n\n" + JSON.stringify(seedData, null, 2));
+      }
+
+      localStorage.removeItem("founder_brief");
       router.push("/founder/success");
     } catch (err: any) {
       alert(err?.message || "Something went wrong");
@@ -60,31 +87,13 @@ export default function FounderBriefPage() {
   };
 
   if (!brief)
-    return (
-      <div style={{ padding: 40, fontFamily: "system-ui" }}>
-        Loading…
-      </div>
-    );
+    return <div style={{ padding: 40, fontFamily: "system-ui" }}>Loading…</div>;
 
   return (
-    <div
-      style={{
-        padding: 40,
-        fontFamily: "system-ui",
-        maxWidth: 820,
-        margin: "0 auto",
-      }}
-    >
+    <div style={{ padding: 40, fontFamily: "system-ui", maxWidth: 820, margin: "0 auto" }}>
       <h1>1-Page Project Brief</h1>
 
-      <div
-        style={{
-          marginTop: 18,
-          padding: 20,
-          border: "1px solid #eee",
-          borderRadius: 12,
-        }}
-      >
+      <div style={{ marginTop: 18, padding: 20, border: "1px solid #eee", borderRadius: 12 }}>
         <h2 style={{ marginTop: 0 }}>{brief.title}</h2>
 
         <h3>Outcome goal</h3>
