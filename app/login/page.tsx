@@ -12,6 +12,50 @@ export default function LoginPage() {
   const [msg, setMsg] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
+  const routeAfterLogin = async () => {
+    // user is logged in at this point
+    const { data: userData } = await supabase.auth.getUser();
+    const user = userData.user;
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role, subscription_status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      // If something goes wrong, at least let them in
+      router.push("/protected");
+      return;
+    }
+
+    // No profile yet = needs onboarding
+    if (!profile) {
+      router.push("/onboarding");
+      return;
+    }
+
+    const role = String(profile.role || "").toLowerCase().trim();
+    const sub = String(profile.subscription_status || "inactive").toLowerCase().trim();
+
+    if (role === "founder") {
+      router.push("/founder");
+      return;
+    }
+
+    if (role === "builder") {
+      router.push(sub === "active" ? "/builder" : "/subscribe");
+      return;
+    }
+
+    router.push("/protected");
+  };
+
   const handleAuth = async () => {
     setMsg(null);
     setLoading(true);
@@ -35,7 +79,7 @@ export default function LoginPage() {
         });
         if (error) throw error;
 
-        router.push("/onboarding");
+        await routeAfterLogin();
       }
     } catch (e: any) {
       setMsg(`❌ ${e.message}`);
@@ -103,7 +147,7 @@ export default function LoginPage() {
       )}
 
       <p style={{ marginTop: 20, color: "#666", fontSize: 13 }}>
-        MVP note: This is basic email+password auth. We’ll add roles (Founder/Builder) next.
+        MVP note: Login routes you directly to the right dashboard (Founder/Builder) once your profile exists.
       </p>
     </div>
   );

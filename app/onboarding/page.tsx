@@ -10,6 +10,48 @@ export default function OnboardingPage() {
   const [email, setEmail] = useState<string | null>(null);
   const [msg, setMsg] = useState<string | null>(null);
 
+  const routeBasedOnProfile = async () => {
+    const { data } = await supabase.auth.getUser();
+    const user = data.user;
+
+    if (!user) {
+      router.push("/login");
+      return;
+    }
+
+    const { data: profile, error } = await supabase
+      .from("profiles")
+      .select("role, subscription_status")
+      .eq("id", user.id)
+      .maybeSingle();
+
+    if (error) {
+      router.push("/protected");
+      return;
+    }
+
+    if (!profile || !profile.role) {
+      // still onboarding
+      setLoading(false);
+      return;
+    }
+
+    const role = String(profile.role || "").toLowerCase().trim();
+    const sub = String(profile.subscription_status || "inactive").toLowerCase().trim();
+
+    if (role === "founder") {
+      router.push("/founder");
+      return;
+    }
+
+    if (role === "builder") {
+      router.push(sub === "active" ? "/builder" : "/subscribe");
+      return;
+    }
+
+    router.push("/protected");
+  };
+
   useEffect(() => {
     const load = async () => {
       const { data } = await supabase.auth.getUser();
@@ -22,22 +64,12 @@ export default function OnboardingPage() {
 
       setEmail(user.email ?? null);
 
-      // If role already set, skip onboarding
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("role")
-        .eq("id", user.id)
-        .maybeSingle();
-
-      if (profile?.role) {
-        router.push("/protected");
-        return;
-      }
-
-      setLoading(false);
+      // If role already set, go to the right dashboard
+      await routeBasedOnProfile();
     };
 
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [router]);
 
   const setRole = async (role: "founder" | "builder") => {
@@ -52,9 +84,13 @@ export default function OnboardingPage() {
       return;
     }
 
-    const { error } = await supabase
-      .from("profiles")
-      .upsert({ id: user.id, role });
+    // When a builder selects role, default them to inactive until Stripe activates
+    const payload =
+      role === "builder"
+        ? { id: user.id, role: "builder", subscription_status: "inactive" }
+        : { id: user.id, role: "founder" };
+
+    const { error } = await supabase.from("profiles").upsert(payload);
 
     if (error) {
       setMsg("❌ " + error.message);
@@ -62,7 +98,12 @@ export default function OnboardingPage() {
       return;
     }
 
-    router.push("/protected");
+    // Route immediately to correct destination
+    if (role === "founder") {
+      router.push("/founder");
+    } else {
+      router.push("/subscribe");
+    }
   };
 
   if (loading) {
