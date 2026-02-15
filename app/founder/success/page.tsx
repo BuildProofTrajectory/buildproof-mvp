@@ -7,11 +7,10 @@ export default function FounderSuccessPage() {
     <div style={{ padding: 40, fontFamily: "system-ui", maxWidth: 720, margin: "0 auto" }}>
       <h1>Project Posted ✅</h1>
       <p style={{ color: "#555" }}>
-        Your project has been saved. Next we’ll build the page that shows your posted projects and your recommended
-        builder matches.
+        Your project is live. Builders who match the category will be able to request it.
       </p>
 
-      <div style={{ display: "flex", gap: 12, marginTop: 18 }}>
+      <div style={{ display: "flex", gap: 12, marginTop: 18, flexWrap: "wrap" }}>
         <Link
           href="/founder/intake"
           style={{
@@ -27,7 +26,7 @@ export default function FounderSuccessPage() {
         </Link>
 
         <Link
-          href="/protected"
+          href="/founder"
           style={{
             padding: "12px 16px",
             borderRadius: 10,
