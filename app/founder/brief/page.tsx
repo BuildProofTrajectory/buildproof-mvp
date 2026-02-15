@@ -33,6 +33,22 @@ export default function FounderBriefPage() {
         return;
       }
 
+      // Enforce: max 3 active projects (posted or active)
+    const { count, error: countErr } = await supabase
+    .from("projects")
+    .select("*", { count: "exact", head: true })
+    .eq("founder_id", user.id)
+    .in("status", ["posted", "active"]);
+
+    if (countErr) {
+    alert("Could not check project limit: " + countErr.message);
+    return;
+    }
+
+if ((count || 0) >= 3) {
+  alert("You already have 3 active projects. Please complete/archive one before posting a new project.");
+  return;
+}
       // Category (simple MVP mapping)
       const titleLower = String(brief.title || "").toLowerCase();
       const category =
