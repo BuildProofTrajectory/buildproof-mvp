@@ -120,9 +120,22 @@ export default function BuilderActiveProjectPage() {
             Status: <b>{project.status}</b> • Created: {new Date(project.created_at).toLocaleString()}
           </p>
 
-          <div style={{ marginTop: 12, padding: 12, borderRadius: 10, background: "#fafafa", border: "1px solid #eee" }}>
-            <b>Next MVP step:</b> we’ll add deliverables/checklist + a simple check-in log here.
-          </div>
+          <Link
+            href={`/project/${project.id}`}
+            style={{
+              display: "inline-block",
+              marginTop: 12,
+              padding: "10px 12px",
+              borderRadius: 10,
+              border: "1px solid #111",
+              background: "#111",
+              color: "white",
+              textDecoration: "none",
+              fontWeight: 800,
+            }}
+          >
+            Open Workspace
+          </Link>
         </div>
       )}
     </div>

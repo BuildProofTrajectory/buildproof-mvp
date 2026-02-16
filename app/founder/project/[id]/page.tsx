@@ -74,7 +74,6 @@ export default function FounderProjectDetail() {
       }
 
       alert("Builder assigned ✅");
-      router.refresh?.();
       window.location.reload();
     } finally {
       setApproving(null);
@@ -92,9 +91,29 @@ export default function FounderProjectDetail() {
           <p style={{ marginTop: 0, color: "#555" }}>{project.goal}</p>
           <p style={{ color: "#777" }}>
             Status: <b>{project.status}</b>{" "}
-            {project.assigned_builder_id ? `(Assigned: ${project.assigned_builder_id})` : ""}
+            {project.assigned_builder_id ? `(Assigned)` : ""}
           </p>
+
+          {project.assigned_builder_id ? (
+            <Link
+              href={`/project/${project.id}`}
+              style={{
+                display: "inline-block",
+                marginTop: 10,
+                padding: "10px 12px",
+                borderRadius: 10,
+                border: "1px solid #111",
+                background: "#111",
+                color: "white",
+                textDecoration: "none",
+                fontWeight: 800,
+              }}
+            >
+              Open Workspace
+            </Link>
+          ) : null}
         </div>
+
         <Link href="/founder" style={{ alignSelf: "center" }}>
           Back
         </Link>
